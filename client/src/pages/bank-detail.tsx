@@ -40,7 +40,6 @@ import {
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import transactionsData from "@/data/transactions.json";
 
 interface Transaction {
     id: string;
@@ -49,6 +48,8 @@ interface Transaction {
     deposit: string;
     withdrawal: string;
     status: 'uncategorized' | 'recognized' | 'excluded';
+    payee?: string;
+    referenceNumber?: string;
 }
 
 export default function BankDetail() {
@@ -60,16 +61,14 @@ export default function BankDetail() {
         queryKey: ["/api/bank-accounts"],
     });
 
-    const account = accountsData?.data?.find(a => a.id === id);
-
-    // Combine transactions from JSON and localStorage
-    const [importedTransactions] = useState<Transaction[]>(() => {
-        const stored = localStorage.getItem("imported_transactions");
-        return stored ? JSON.parse(stored) : [];
+    const { data: transactionsData } = useQuery<{ success: boolean; data: Transaction[] }>({
+        queryKey: ["/api/bank-transactions"],
     });
 
-    // Transactions data from JSON
-    const transactions: Transaction[] = [...(transactionsData as Transaction[]), ...importedTransactions];
+    const account = accountsData?.data?.find(a => a.id === id);
+
+    // All transactions now come from the server API
+    const transactions: Transaction[] = transactionsData?.data || [];
 
     const uncategorizedCount = transactions.filter(t => t.status === 'uncategorized').length;
     const recognizedCount = transactions.filter(t => t.status === 'recognized').length;
@@ -219,11 +218,11 @@ export default function BankDetail() {
                                 <TableCell className="text-sm">{tx.date}</TableCell>
                                 <TableCell className="text-sm font-medium">₹{tx.withdrawal}</TableCell>
                                 <TableCell className="text-sm font-medium">₹{tx.deposit}</TableCell>
-                                <TableCell className="text-sm">{(tx as any).payee || "-"}</TableCell>
+                                <TableCell className="text-sm">{tx.payee || "-"}</TableCell>
                                 <TableCell className="text-sm text-slate-500 max-w-md truncate">
                                     {tx.details}
                                 </TableCell>
-                                <TableCell className="text-sm">{(tx as any).referenceNumber || "-"}</TableCell>
+                                <TableCell className="text-sm">{tx.referenceNumber || "-"}</TableCell>
                                 <TableCell>
                                     <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-pointer" />
                                 </TableCell>

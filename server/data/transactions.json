@@ -1,23 +1,34 @@
 [
-    {
-        "id": "1",
-        "date": "2023-10-01",
-        "details": "Opening Balance",
-        "deposit": "10000.00",
-        "withdrawal": "0.00"
-    },
-    {
-        "id": "2",
-        "date": "2023-10-05",
-        "details": "Payment from Client A",
-        "deposit": "5000.00",
-        "withdrawal": "0.00"
-    },
-    {
-        "id": "3",
-        "date": "2023-10-10",
-        "details": "Office Supplies",
-        "deposit": "0.00",
-        "withdrawal": "250.00"
-    }
+  {
+    "id": "1",
+    "date": "2023-10-01",
+    "details": "Opening Balance",
+    "deposit": "10000.00",
+    "withdrawal": "0.00",
+    "status": "uncategorized"
+  },
+  {
+    "id": "2",
+    "date": "2023-10-05",
+    "details": "Payment from Client A",
+    "deposit": "5000.00",
+    "withdrawal": "0.00",
+    "status": "uncategorized"
+  },
+  {
+    "id": "3",
+    "date": "2023-10-10",
+    "details": "Office Supplies",
+    "deposit": "0.00",
+    "withdrawal": "250.00",
+    "status": "recognized"
+  },
+  {
+    "id": "4",
+    "date": "2023-10-15",
+    "details": "Utility Bill",
+    "deposit": "0.00",
+    "withdrawal": "150.00",
+    "status": "uncategorized"
+  }
 ]

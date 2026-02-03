@@ -7999,5 +7999,44 @@ export async function registerRoutes(
       res.status(400).json({ success: false, message: error.message });
     }
   });
+
+  // Bank Transactions
+  const TRANSACTIONS_FILE = path.join(DATA_DIR, "transactions.json");
+  app.get("/api/bank-transactions", (_req, res) => {
+    try {
+      if (!fs.existsSync(TRANSACTIONS_FILE)) {
+        res.json({ success: true, data: [] });
+        return;
+      }
+      const transactions = JSON.parse(fs.readFileSync(TRANSACTIONS_FILE, "utf-8"));
+      res.json({ success: true, data: transactions });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Failed to read transactions" });
+    }
+  });
+
+  app.post("/api/bank-transactions", (req, res) => {
+    try {
+      const newTransactions = req.body.transactions;
+
+      // Read existing transactions
+      let existingTransactions = [];
+      if (fs.existsSync(TRANSACTIONS_FILE)) {
+        existingTransactions = JSON.parse(fs.readFileSync(TRANSACTIONS_FILE, "utf-8"));
+      }
+
+      // Merge new transactions with existing ones
+      const allTransactions = [...existingTransactions, ...newTransactions];
+
+      // Write back to file
+      fs.writeFileSync(TRANSACTIONS_FILE, JSON.stringify(allTransactions, null, 2));
+
+      res.json({ success: true, data: allTransactions });
+    } catch (error) {
+      console.error("Error saving transactions:", error);
+      res.status(500).json({ success: false, message: "Failed to save transactions" });
+    }
+  });
+
   return httpServer;
 }

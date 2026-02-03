@@ -8,9 +8,10 @@ import {
     ArrowLeft,
     FileUp
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import {
     Select,
     SelectContent,
@@ -21,14 +22,14 @@ import {
 
 export default function ImportStatement() {
     const { toast } = useToast();
+    const [, setLocation] = useLocation();
+    const queryClient = useQueryClient();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const steps = [
         { id: 1, label: "Configure", active: true },
-        { id: 2, label: "Map Fields", active: false },
-        { id: 3, label: "Preview", active: false },
     ];
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +57,103 @@ export default function ImportStatement() {
             title: "File selected",
             description: `${file.name} is ready for import.`,
         });
+    };
+
+    const parseCSV = (text: string) => {
+        const lines = text.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+        const transactions = [];
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+
+            // Skip empty rows or rows with all empty values
+            if (values.every(v => !v)) continue;
+
+            const transaction: any = {
+                id: `imported_${Date.now()}_${i}`,
+                status: 'uncategorized'
+            };
+
+            headers.forEach((header, index) => {
+                const value = values[index] || '';
+
+                if (header.includes('date')) {
+                    transaction.date = value;
+                } else if (header.includes('withdrawal') || header.includes('debit')) {
+                    transaction.withdrawal = value || '0.00';
+                } else if (header.includes('deposit') || header.includes('credit')) {
+                    transaction.deposit = value || '0.00';
+                } else if (header.includes('payee') || header.includes('name')) {
+                    transaction.payee = value;
+                } else if (header.includes('description') || header.includes('details') || header.includes('narration')) {
+                    transaction.details = value;
+                } else if (header.includes('reference') || header.includes('ref')) {
+                    transaction.referenceNumber = value;
+                }
+            });
+
+            // Skip rows that don't have a valid date or have both deposit and withdrawal as 0
+            const hasValidDate = transaction.date && transaction.date.trim() !== '';
+            const hasValidAmount = (parseFloat(transaction.withdrawal || '0') > 0) ||
+                (parseFloat(transaction.deposit || '0') > 0);
+
+            if (!hasValidDate || !hasValidAmount) {
+                continue; // Skip this row
+            }
+
+            // Ensure required fields exist
+            if (!transaction.withdrawal) transaction.withdrawal = '0.00';
+            if (!transaction.deposit) transaction.deposit = '0.00';
+            if (!transaction.details) transaction.details = transaction.payee || 'Imported Transaction';
+
+            transactions.push(transaction);
+        }
+
+        return transactions;
+    };
+
+    const handleImport = async () => {
+        if (!selectedFile) return;
+
+        try {
+            const text = await selectedFile.text();
+            const transactions = parseCSV(text);
+
+            // POST to server to save transactions permanently
+            const response = await fetch('/api/bank-transactions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ transactions }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save transactions');
+            }
+
+            // Invalidate the transactions cache so the new data appears immediately
+            await queryClient.invalidateQueries({ queryKey: ['/api/bank-transactions'] });
+
+            toast({
+                title: "Import Successful",
+                description: `${transactions.length} transactions imported and saved to server.`,
+            });
+
+            // Navigate back to banking page after a short delay
+            setTimeout(() => {
+                setLocation('/banking');
+            }, 1500);
+
+        } catch (error) {
+            console.error('Import error:', error);
+            toast({
+                title: "Import Failed",
+                description: "Failed to import transactions. Please try again.",
+                variant: "destructive"
+            });
+        }
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -164,31 +262,6 @@ export default function ImportStatement() {
 
                     {/* Format Info */}
                     <div className="space-y-4">
-                        <p className="text-sm text-slate-600">
-                            Ensure that the import file is in the correct format by comparing it with our sample file.
-                        </p>
-                        <Button variant="link" className="text-blue-600 p-0 h-auto font-medium">
-                            Download sample file
-                            <ChevronDown className="h-4 w-4 ml-1" />
-                        </Button>
-
-                        <div className="grid grid-cols-2 gap-8 pt-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
-                                    Character Encoding
-                                    <HelpCircle className="h-3 w-3 text-slate-400" />
-                                </label>
-                                <Select defaultValue="utf8">
-                                    <SelectTrigger className="w-full bg-white">
-                                        <SelectValue placeholder="Select encoding" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="utf8">UTF-8 (Unicode)</SelectItem>
-                                        <SelectItem value="utf16">UTF-16</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Next Button Section */}
@@ -196,29 +269,11 @@ export default function ImportStatement() {
                         <Button
                             className="bg-blue-600 hover:bg-blue-700 px-8"
                             disabled={!selectedFile}
-                            onClick={() => {
-                                toast({
-                                    title: "Moving to next step",
-                                    description: "Mapping fields...",
-                                });
-                            }}
+                            onClick={handleImport}
                         >
-                            Next
+                            Import
                         </Button>
                     </div>
-
-                    {/* Page Tips */}
-                    <Card className="p-6 bg-slate-50/50 border-none shadow-none space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="h-6 w-6 rounded bg-yellow-100 flex items-center justify-center">
-                                <span className="text-yellow-700 text-sm">💡</span>
-                            </div>
-                            <h3 className="font-semibold text-slate-900">Page Tips</h3>
-                        </div>
-                        <ul className="space-y-3 text-sm text-slate-600 list-disc pl-5">
-                            <li>If you have files in other formats, you can convert it to an accepted file format using any online/offline converter.</li>
-                        </ul>
-                    </Card>
                 </div>
             </main>
         </div>
