@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useLocation, useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { BankAccount } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -108,9 +108,11 @@ export default function BankDetail() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-                    <Button variant="outline" size="sm" className="h-9">
-                        Import Statement
-                    </Button>
+                    <Link href="/import-statement">
+                        <Button variant="outline" size="sm" className="h-9">
+                            Import Statement
+                        </Button>
+                    </Link>
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Settings className="h-4 w-4" />
                     </Button>

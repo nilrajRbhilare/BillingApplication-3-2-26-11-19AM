@@ -48,6 +48,7 @@ import VendorCreditEdit from "@/pages/vendor-credit-edit";
 import TimeTracking from "@/pages/time-tracking";
 import Banking from "@/pages/banking";
 import BankDetail from "@/pages/bank-detail";
+import ImportStatement from "@/pages/import-statement";
 import FilingCompliance from "@/pages/filing-compliance";
 import Accountant from "@/pages/accountant";
 import Documents from "@/pages/documents";
@@ -140,6 +141,7 @@ function Router() {
         <Route path="/time-tracking" component={TimeTracking} />
         <Route path="/banking" component={Banking} />
         <Route path="/banking/:id" component={BankDetail} />
+        <Route path="/import-statement" component={ImportStatement} />
         <Route path="/filing-compliance" component={FilingCompliance} />
         <Route path="/accountant" component={Accountant} />
         <Route path="/documents" component={Documents} />
