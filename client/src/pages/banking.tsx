@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertBankAccountSchema, type BankAccount } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 
 export default function Banking() {
+  const [, setLocation] = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [viewingAccount, setViewingAccount] = useState<BankAccount | null>(null);
@@ -341,8 +343,8 @@ export default function Banking() {
       ) : accounts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((account: BankAccount) => (
-            <Card key={account.id} className="hover-elevate cursor-pointer group relative">
-              <div className="absolute top-2 right-2 z-10">
+            <Card key={account.id} className="hover-elevate cursor-pointer group relative" onClick={() => setLocation(`/banking/${account.id}`)}>
+              <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -375,7 +377,7 @@ export default function Banking() {
                 </CardTitle>
                 <Landmark className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent onClick={() => setViewingAccount(account)}>
+              <CardContent>
                 <div className="text-2xl font-bold">{account.currency} 0.00</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {account.bankName || "Manual Account"} • {account.accountNumber ? `****${account.accountNumber.slice(-4)}` : "No account number"}
