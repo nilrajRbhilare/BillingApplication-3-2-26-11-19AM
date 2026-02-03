@@ -62,8 +62,14 @@ export default function BankDetail() {
 
     const account = accountsData?.data?.find(a => a.id === id);
 
+    // Combine transactions from JSON and localStorage
+    const [importedTransactions] = useState<Transaction[]>(() => {
+        const stored = localStorage.getItem("imported_transactions");
+        return stored ? JSON.parse(stored) : [];
+    });
+
     // Transactions data from JSON
-    const transactions: Transaction[] = transactionsData as Transaction[];
+    const transactions: Transaction[] = [...(transactionsData as Transaction[]), ...importedTransactions];
 
     const uncategorizedCount = transactions.filter(t => t.status === 'uncategorized').length;
     const recognizedCount = transactions.filter(t => t.status === 'recognized').length;
@@ -194,9 +200,11 @@ export default function BankDetail() {
                                 <Input type="checkbox" className="h-4 w-4" />
                             </TableHead>
                             <TableHead className="text-xs font-bold uppercase">Date <ChevronDown className="inline h-3 w-3" /></TableHead>
-                            <TableHead className="text-xs font-bold uppercase">Statement Details</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-right">Deposits</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-right">Withdrawals</TableHead>
+                            <TableHead className="text-xs font-bold uppercase">Withdrawals</TableHead>
+                            <TableHead className="text-xs font-bold uppercase">Deposits</TableHead>
+                            <TableHead className="text-xs font-bold uppercase">Payee</TableHead>
+                            <TableHead className="text-xs font-bold uppercase">Description</TableHead>
+                            <TableHead className="text-xs font-bold uppercase">Reference Number</TableHead>
                             <TableHead className="w-10">
                                 <Search className="h-4 w-4 text-muted-foreground" />
                             </TableHead>
@@ -209,11 +217,13 @@ export default function BankDetail() {
                                     <Input type="checkbox" className="h-4 w-4" />
                                 </TableCell>
                                 <TableCell className="text-sm">{tx.date}</TableCell>
+                                <TableCell className="text-sm font-medium">₹{tx.withdrawal}</TableCell>
+                                <TableCell className="text-sm font-medium">₹{tx.deposit}</TableCell>
+                                <TableCell className="text-sm">{(tx as any).payee || "-"}</TableCell>
                                 <TableCell className="text-sm text-slate-500 max-w-md truncate">
                                     {tx.details}
                                 </TableCell>
-                                <TableCell className="text-sm text-right font-medium">{tx.deposit}</TableCell>
-                                <TableCell className="text-sm text-right font-medium">₹{tx.withdrawal}</TableCell>
+                                <TableCell className="text-sm">{(tx as any).referenceNumber || "-"}</TableCell>
                                 <TableCell>
                                     <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-pointer" />
                                 </TableCell>
