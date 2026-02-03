@@ -1,0 +1,17 @@
+{
+  "bankAccounts": [
+    {
+      "accountType": "bank",
+      "accountName": "Cybaem Business Account",
+      "accountCode": "BANK-INR-001",
+      "currency": "INR",
+      "accountNumber": "123456789012",
+      "bankName": "HDFC Bank",
+      "ifsc": "HDFC0001234",
+      "description": "Primary business bank account used for receiving customer payments and managing expenses.\n",
+      "isPrimary": false,
+      "id": "677663ef-9966-401f-a38f-efc0147abdd1",
+      "createdAt": "2026-02-03T05:36:20.175Z"
+    }
+  ]
+}
